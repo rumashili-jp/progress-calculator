@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>進捗予測計算ツール</title>
+    <!-- Tailwind CSS for elegant and modern UI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons for visual depth -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap');
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex items-center justify-center p-4 sm:p-6 md:p-8">
+
+    <div class="w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden transition-all duration-300 hover:shadow-2xl">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-indigo-600 to-violet-600 p-6 sm:p-8 text-white">
+            <div class="flex items-center gap-3">
+                <div class="p-2.5 bg-white/10 rounded-lg backdrop-blur-sm">
+                    <i data-lucide="calculator" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold tracking-tight">進捗予測計算ツール</h1>
+                    <p class="text-indigo-100 text-xs sm:text-sm mt-1">現在の進捗と経過時間から目標達成時間を予測します</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form & Content -->
+        <div class="p-6 sm:p-8 space-y-6">
+            
+            <!-- Time Settings Section -->
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-4">
+                <h2 class="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                    <i data-lucide="clock" class="w-4 h-4 text-indigo-500"></i>
+                    時間設定
+                </h2>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Base Start Time -->
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-1">イベント開始時刻</label>
+                        <div class="relative">
+                            <input type="time" id="startTime" value="19:15" 
+                                class="w-full pl-10 pr-3 py-2.5 bg-white border border-slate-200 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm transition-all">
+                            <div class="absolute left-3 top-3 text-slate-400">
+                                <i data-lucide="play-circle" class="w-4 h-4"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Current Time (Auto-filled but editable) -->
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-1 flex justify-between items-center">
+                            <span>現在時刻</span>
+                            <button id="btnResetTime" class="text-indigo-600 hover:text-indigo-700 font-semibold flex items-center gap-1 transition-colors">
+                                <i data-lucide="refresh-cw" class="w-3 h-3"></i>現在に更新
+                            </button>
+                        </label>
+                        <div class="relative">
+                            <input type="time" id="currentTime" 
+                                class="w-full pl-10 pr-3 py-2.5 bg-white border border-slate-200 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm transition-all">
+                            <div class="absolute left-3 top-3 text-slate-400">
+                                <i data-lucide="clock" class="w-4 h-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PT Result Display -->
+                <div class="text-xs text-slate-500 flex items-center gap-2 px-1">
+                    <i data-lucide="hourglass" class="w-3.5 h-3.5 text-slate-400"></i>
+                    <span>経過時間 (PT): <span id="ptValueDisplay" class="font-semibold text-indigo-600">0</span> 分</span>
+                </div>
+            </div>
+
+            <!-- Value Settings Section -->
+            <div class="space-y-4">
+                <h2 class="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                    <i data-lucide="trending-up" class="w-4 h-4 text-indigo-500"></i>
+                    数値設定
+                </h2>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Current Progress (nm) -->
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-1">現在の値 (ユーザー入力)</label>
+                        <div class="relative">
+                            <input type="number" id="inputNM" value="11250000" placeholder="例: 11250000"
+                                class="w-full pl-10 pr-3 py-2.5 bg-white border border-slate-200 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                            <div class="absolute left-3 top-3 text-slate-400">
+                                <i data-lucide="user" class="w-4 h-4"></i>
+                            </div>
+                        </div>
+                        <p id="jpNM" class="text-[11px] text-slate-400 mt-1 ml-1"></p>
+                    </div>
+
+                    <!-- Target Progress (rt) -->
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-1">目標値 (rt)</label>
+                        <div class="relative">
+                            <input type="number" id="inputRT" value="21000000" placeholder="例: 21000000"
+                                class="w-full pl-10 pr-3 py-2.5 bg-white border border-slate-200 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                            <div class="absolute left-3 top-3 text-slate-400">
+                                <i data-lucide="target" class="w-4 h-4"></i>
+                            </div>
+                        </div>
+                        <p id="jpRT" class="text-[11px] text-slate-400 mt-1 ml-1"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Result Display Section -->
+            <div class="bg-indigo-50/50 rounded-xl border border-indigo-100 p-5 space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-semibold text-indigo-900 flex items-center gap-2">
+                        <i data-lucide="file-text" class="w-4 h-4"></i>
+                        出力テキスト
+                    </h3>
+                    <span class="text-[11px] text-indigo-500 font-medium bg-indigo-100/60 px-2 py-1 rounded-md">
+                        クリップボード形式
+                    </span>
+                </div>
+
+                <!-- Text Box -->
+                <div class="relative">
+                    <textarea id="outputText" readonly rows="3"
+                        class="w-full p-4 bg-white border border-indigo-100 rounded-lg text-slate-700 text-sm font-mono focus:outline-none resize-none shadow-inner leading-relaxed"></textarea>
+                    
+                    <!-- Copy Button Inside Text Area -->
+                    <button id="btnCopy" class="absolute right-3 bottom-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs py-2 px-3.5 rounded-md shadow-sm hover:shadow transition-all flex items-center gap-1.5 active:scale-95">
+                        <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                        <span>コピー</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Toast notification for copy feedback -->
+            <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs px-4 py-2.5 rounded-full shadow-lg flex items-center gap-2 opacity-0 pointer-events-none transition-all duration-300 transform translate-y-2">
+                <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
+                <span>クリップボードにコピーしました！</span>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // DOM elements
+        const startTimeInput = document.getElementById('startTime');
+        const currentTimeInput = document.getElementById('currentTime');
+        const btnResetTime = document.getElementById('btnResetTime');
+        const inputNM = document.getElementById('inputNM');
+        const inputRT = document.getElementById('inputRT');
+        const jpNMText = document.getElementById('jpNM');
+        const jpRTText = document.getElementById('jpRT');
+        const ptValueDisplay = document.getElementById('ptValueDisplay');
+        const outputText = document.getElementById('outputText');
+        const btnCopy = document.getElementById('btnCopy');
+        const toast = document.getElementById('toast');
+
+        // Automatic set of current local time
+        function setCurrentTime() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            currentTimeInput.value = `${hours}:${minutes}`;
+        }
+
+        // Format number to Japanese units automatically (rt to jp complement)
+        function formatToJapaneseUnit(num) {
+            if (isNaN(num) || num <= 0) return '';
+            
+            // Supporting typical game points values (万, 億)
+            if (num >= 100000000) {
+                const oku = Math.floor(num / 100000000);
+                const man = Math.floor((num % 100000000) / 10000);
+                return man > 0 ? `${oku}億${man}万` : `${oku}億`;
+            } else if (num >= 10000) {
+                return `${Math.floor(num / 10000)}万`;
+            }
+            return num.toLocaleString();
+        }
+
+        // Main Calculation Function
+        function calculate() {
+            // Get times
+            const startVal = startTimeInput.value.split(':');
+            const currentVal = currentTimeInput.value.split(':');
+            
+            if (startVal.length !== 2 || currentVal.length !== 2) return;
+
+            const startH = parseInt(startVal[0]);
+            const startM = parseInt(startVal[1]);
+            const nowH = parseInt(currentVal[0]);
+            const nowM = parseInt(currentVal[1]);
+
+            // Calculate elapsed time (pt)
+            // Handle day cross-over nicely if start time is larger than current time
+            let pt = (nowH * 60 + nowM) - (startH * 60 + startM);
+            if (pt < 0) {
+                pt += 24 * 60; // Assume next day
+            }
+            ptValueDisplay.textContent = pt;
+
+            // Get numerical values
+            const nm = parseFloat(inputNM.value) || 0;
+            const rt = parseFloat(inputRT.value) || 0;
+
+            // Update real-time label support
+            jpNMText.textContent = nm > 0 ? `表示目安: ${formatToJapaneseUnit(nm)}` : '';
+            const jpRT = formatToJapaneseUnit(rt);
+            jpRTText.textContent = rt > 0 ? `表示目安: ${jpRT}` : '';
+
+            // Calculate progress and estimated time
+            if (rt <= 0 || nm <= 0 || pt <= 0) {
+                outputText.value = "数値を正しく入力してください。";
+                return;
+            }
+
+            // Calculation logic
+            const per = (rt - nm) / rt;
+            const k = per / (nm / rt);
+            const rh = (pt / 60) * k;
+            
+            // To ensure positive forecast times
+            const finalRH = Math.max(0, rh);
+            const rm = Math.floor((finalRH % 1) * 60);
+
+            // Progress percentage calculation
+            const progressPercent = Math.floor(nm / (rt / 1000)) / 10;
+
+            // Output formulation matching user's specification style
+            const resultText = `【定期】開始から${pt}分。${jpRT}まで${progressPercent.toFixed(1)}%　${jpRT}到達予想 : ${Math.floor(finalRH)}時間${rm}分後`;
+            
+            outputText.value = resultText;
+        }
+
+        // Copy mechanism utilizing fallback method due to potential iframe constraints
+        function copyToClipboard() {
+            outputText.select();
+            outputText.setSelectionRange(0, 99999); // For mobile devices
+
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showToast();
+                } else {
+                    console.error('Copy failed');
+                }
+            } catch (err) {
+                console.error('Fallback copy triggered error: ', err);
+            }
+        }
+
+        function showToast() {
+            toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-2');
+            toast.classList.add('opacity-100', 'translate-y-0');
+            
+            setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-2');
+            }, 2500);
+        }
+
+        // Event Listeners
+        window.addEventListener('load', () => {
+            setCurrentTime();
+            calculate();
+        });
+
+        btnResetTime.addEventListener('click', () => {
+            setCurrentTime();
+            calculate();
+        });
+
+        // Event-driven real-time calculation
+        [startTimeInput, currentTimeInput, inputNM, inputRT].forEach(element => {
+            element.addEventListener('input', calculate);
+        });
+
+        btnCopy.addEventListener('click', copyToClipboard);
+    </script>
+</body>
+</html>
