@@ -26,7 +26,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl sm:text-2xl font-bold tracking-tight">進捗予測計算ツール</h1>
-                    <p class="text-indigo-100 text-xs sm:text-sm mt-1">現在の進捗と経過時間から目標達成時間を予測します</p>
+                    <p class="text-indigo-100 text-xs sm:text-sm mt-1">現在の進捗と経過時間から目標達成日時を予測します</p>
                 </div>
             </div>
         </div>
@@ -229,17 +229,39 @@
             // Calculation logic
             const per = (rt - nm) / rt;
             const k = per / (nm / rt);
-            const rh = (pt / 60) * k;
+            const rh = (pt / 60) * k; // 必要な時間（時間単位）
             
             // To ensure positive forecast times
             const finalRH = Math.max(0, rh);
-            const rm = Math.floor((finalRH % 1) * 60);
 
             // Progress percentage calculation
             const progressPercent = Math.floor(nm / (rt / 1000)) / 10;
 
+            // Calculate exact target date/time based on "currentTime" + "finalRH"
+            const estBaseDate = new Date();
+            estBaseDate.setHours(nowH, nowM, 0, 0); // Set to selected current time on current date
+
+            // Add estimated hours to the base date
+            const estDate = new Date(estBaseDate.getTime() + (finalRH * 60 * 60 * 1000));
+
+            // Format target date/time
+            const estH = String(estDate.getHours()).padStart(2, '0');
+            const estMin = String(estDate.getMinutes()).padStart(2, '0');
+
+            let estTimeStr = "";
+            // Check if it crosses to another day (different date, month, or year)
+            if (estDate.getDate() !== estBaseDate.getDate() || 
+                estDate.getMonth() !== estBaseDate.getMonth() || 
+                estDate.getFullYear() !== estBaseDate.getFullYear()) {
+                const estMonth = estDate.getMonth() + 1;
+                const estDay = estDate.getDate();
+                estTimeStr = `${estMonth}/${estDay} ${estH}:${estMin}`;
+            } else {
+                estTimeStr = `${estH}:${estMin}`;
+            }
+
             // Output formulation matching user's specification style
-            const resultText = `【定期】開始から${pt}分。${jpRT}まで${progressPercent.toFixed(1)}%　${jpRT}到達予想 : ${Math.floor(finalRH)}時間${rm}分後`;
+            const resultText = `【定期】開始から${pt}分。${jpRT}まで${progressPercent.toFixed(1)}%　${jpRT}到達予想時刻 : ${estTimeStr}`;
             
             outputText.value = resultText;
         }
