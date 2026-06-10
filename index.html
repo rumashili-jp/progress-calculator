@@ -261,7 +261,7 @@
             }
 
             // Output formulation matching user's specification style
-            const resultText = `【定期】開始から${pt}分。${jpRT}まで${progressPercent.toFixed(1)}%　${jpRT}到達予想時刻 : ${estTimeStr}`;
+            const resultText = `【定期】開始から${pt}分。${jpRT}まで現在${100-progressPercent.toFixed(1)}%　${jpRT}到達予想時刻 : ${estTimeStr}`;
             
             outputText.value = resultText;
         }
